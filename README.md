@@ -8,3 +8,7 @@ exposx -s -> stdin
 
 exposx$ search or update or exit
 ```
+
+## AI Policy
+No AI is tolerated in this repo!
+Do not commit any vibecoded code :)
