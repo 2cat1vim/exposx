@@ -1,2 +1,2 @@
 # exposx
-CVE-CLI, Common Vulnerability Expose - Common Line Interace (ZIG, NO AI).
+CVE-CLI, Common Vulnerability Expose - Common Line Interace (C, NO AI).
