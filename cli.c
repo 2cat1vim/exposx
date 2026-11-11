@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <curl/curl.h>
+#include <ctype.h>
 
 #define CURL_PATH "https://github.com/2cat1vim/exposx/releases/latest"
 #define CONF_PATH ".exposx"
@@ -39,52 +40,69 @@ void cmd_search(void) {
 }
 
 void cmd_update(void) {
-	CURL *curl_version;
 	CURL *curl;
-	CURLcode result = curl_global_init(CURL_GLOBAL_ALL);
-	if (result != CURLE_OK) {
+	if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
 		fprintf(stderr, "[v]: curl not ok\n");
+
 		return ;
 	}
-	curl_version = curl_easy_init();
-	if (curl_version) {
-		curl_easy_setopt(curl_version, CURLOPT_URL, CURL_PATH);
-		curl_easy_setopt(curl_version, CURLOPT_NOBODY, 1L);
-		if (curl_easy_perform(curl_version) != CURLE_OK) {	
-			fprintf(stderr, "[v]: curl request failed\n");
-		}
-		char *info = NULL;
-		curl_easy_getinfo(curl_version, CURLINFO_REDIRECT_URL, &info);
-		if (info) {
-			char *git_version = strrchr(info, '/') + 1;
-			if (memcmp(git_version, version, strlen(git_version)) == 0) {
-				fprintf(stdout, "You already at the latest version `%s`!\nAbort..\n", version);
-				curl_easy_cleanup(curl_version);
-				return ;
-			}
-			else {
-				fprintf(stdout, "You are outdated, latest is `%s`\nUpdating..", git_version);
-			}
-		}
-		curl_easy_cleanup(curl_version);
-	}	
 	curl = curl_easy_init();
-	if (curl) {
-		curl_easy_setopt(curl, CURLOPT_URL, CURL_PATH);
-		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-		FILE *f = fopen("update_exposx.tar.gz", "w");
-		if (!f) {
-			perror("fopen");
-			exit(EXIT_FAILURE);
+	if (!curl) {
+		if (flag & (f_uint)VERBOSE_OPT) {
+			fprintf(stderr, "[v]: curl_easy_init is NULL");
 		}
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, f);
-		curl_easy_setopt(curl, CURLOPT_USERAGENT, "exposx");
-		if (curl_easy_perform(curl) != CURLE_OK) {
-			fprintf(stderr, "[v]: curl request failed\n");
+		curl_global_cleanup();
+		exit(EXIT_FAILURE);
+	}
+	curl_easy_setopt(curl, CURLOPT_URL, CURL_PATH);
+	curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
+	if (curl_easy_perform(curl) != CURLE_OK) {	
+		fprintf(stderr, "[v]: curl request failed\n");
+	}
+	char *info = NULL;
+	curl_easy_getinfo(curl, CURLINFO_REDIRECT_URL, &info);
+	if (!info) {
+		if (flag & (f_uint)VERBOSE_OPT) {
+			fprintf(stderr, "[v]: curl_easy_getinfo is NULL");
 		}
 		curl_easy_cleanup(curl);
-		fclose(f);
+		curl_global_cleanup();
+		exit(EXIT_FAILURE);
 	}
+	char *git_version = strrchr(info, '/') + 1;
+	if (memcmp(git_version, version, strlen(git_version)) == 0) {
+		fprintf(stdout, "You already at the latest version `%s`!\nAbort..\n", version);
+		curl_easy_cleanup(curl);
+		curl_global_cleanup();
+		return ;
+	}
+	fprintf(stdout, "You are outdated, latest is `%s`\nUpdating? [y/n]\n", git_version);
+	char reply;
+	read(STDIN_FILENO, &reply, 1);
+	getchar();
+	reply = tolower(reply);
+	if (reply != 'y') {
+		fprintf(stdout, "Abort..\n");
+		curl_easy_cleanup(curl);
+		curl_global_cleanup();
+		return ;
+	}
+	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+	FILE *f = fopen("update_exposx.tar.gz", "w");
+	if (!f) {
+		perror("fopen");
+		curl_easy_cleanup(curl);
+		curl_global_cleanup();
+		exit(EXIT_FAILURE);
+	}
+	curl_easy_setopt(curl, CURLOPT_NOBODY, 0L);
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, f);
+	curl_easy_setopt(curl, CURLOPT_USERAGENT, "exposx");
+	if (curl_easy_perform(curl) != CURLE_OK) {
+		fprintf(stderr, "[v]: curl request failed\n");
+	}
+	fclose(f);
+	curl_easy_cleanup(curl);
 	curl_global_cleanup();
 }
 
