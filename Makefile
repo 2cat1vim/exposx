@@ -24,6 +24,13 @@ check_os:
 	fi
 
 check_package:
+	@if dpkg -s libcurl4-openssl-dev > /dev/null 2>&1; then\
+		echo "Libcurl is already installed";\
+	else\
+		echo "Libcurl is not installed";\
+		echo "Download it..";\
+		sudo apt-get install -y libcurl4-openssl-dev;\
+	fi
 	@if dpkg -s clang > /dev/null 2>&1; then\
 		echo "Clang is already installed";\
 	else\
@@ -36,7 +43,7 @@ NAME := exposx_$(STROS)
 
 OBJS = $(SRC:.c=.o)
 $(NAME): $(OBJS)
-	$(CC) $(CFLAGS) -o $(NAME) $(OBJS) -lreadline
+	$(CC) $(CFLAGS) -o $(NAME) $(OBJS) -lcurl
 
 all: check_os check_package $(NAME)
 

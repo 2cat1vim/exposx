@@ -2,6 +2,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <curl/curl.h>
+
+#define CURL_PATH "https://github.com/2cat1vim/exposx/releases/latest"
+#define CONF_PATH ".exposx"
+	#define VERSION_STRING "version:"
+	#define VERSION_SIZE 4
 
 #define READ_LIMIT 256
 
@@ -13,6 +19,7 @@ typedef unsigned int f_uint;
 typedef unsigned long long ull;
 
 f_uint flag = 0;
+char version[VERSION_SIZE + 1];
 
 void header(void) {
 	printf("\n░█▀▀░█░█░█▀█░█▀█░█▀▀░█░█\n"
@@ -32,7 +39,70 @@ void cmd_search(void) {
 }
 
 void cmd_update(void) {
-	return ;
+	CURL *curl;
+	CURLcode result = curl_global_init(CURL_GLOBAL_ALL);
+	if (result != CURLE_OK) {
+		fprintf(stderr, "[v]: curl not ok\n");
+		return ;
+	}
+	curl = curl_easy_init();
+	if (curl) {
+		curl_easy_setopt(curl, CURLOPT_URL, CURL_PATH);
+		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+		FILE *f = fopen("update_exposx.tar.gz", "w");
+		if (!f) {
+			perror("fopen");
+			exit(EXIT_FAILURE);
+		}
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, f);
+		curl_easy_setopt(curl, CURLOPT_USERAGENT, "exposx");
+		result = curl_easy_perform(curl);
+		if (result != CURLE_OK) {
+			fprintf(stderr, "[v]: curl request failed\n");
+		}
+		curl_easy_cleanup(curl);
+		fclose(f);
+	}
+	curl_global_cleanup();
+}
+
+void set_version() {
+	FILE *f = fopen((const char*)CONF_PATH, "r");
+	if (!f) {
+		perror("fopen");
+		exit(EXIT_FAILURE);
+	}
+	while (1) {
+		char buf;
+		char storage[(ull)READ_LIMIT];
+		ull pos = 0;
+		ull r = 0;
+		while ((r = read(fileno(f), &buf, 1)) > 0) {
+			if (pos == (READ_LIMIT - 1)) {
+				if (flag & (f_uint)VERBOSE_OPT) {
+					printf("[v]: max READ_LIMIT, increase with -d\n");
+				}
+				break;
+			}
+			if (buf == '\n') {
+				break;
+			}
+			storage[pos++] = buf;
+		}
+		storage[pos] = '\0';
+		if (memcmp(VERSION_STRING, storage, strlen(VERSION_STRING)) == 0) {
+			strncpy(version, storage + sizeof(VERSION_STRING), VERSION_SIZE);
+			if (flag & (f_uint)VERBOSE_OPT) {
+				printf("[v]: found version `%s`\n", version);
+			}
+			break;
+		}
+		if (r == 0) {
+			fprintf(stderr, "[v]: .exposx is missing 'version:'\n");
+			break;
+		}
+	}
+	fclose(f);
 }
 
 int main(int ac, char *const *av) {
@@ -57,9 +127,7 @@ int main(int ac, char *const *av) {
 				return 1;
 			}
 	}
-	if (flag & (f_uint)VERBOSE_OPT) {
-		fprintf(stdout, "[v]: exposx - version 1.00\n");
-	}
+	set_version();
 	while (1) {
 		fprintf(stdout, "exposx$ ");
 		fflush(stdout);
