@@ -39,12 +39,35 @@ void cmd_search(void) {
 }
 
 void cmd_update(void) {
+	CURL *curl_version;
 	CURL *curl;
 	CURLcode result = curl_global_init(CURL_GLOBAL_ALL);
 	if (result != CURLE_OK) {
 		fprintf(stderr, "[v]: curl not ok\n");
 		return ;
 	}
+	curl_version = curl_easy_init();
+	if (curl_version) {
+		curl_easy_setopt(curl_version, CURLOPT_URL, CURL_PATH);
+		curl_easy_setopt(curl_version, CURLOPT_NOBODY, 1L);
+		if (curl_easy_perform(curl_version) != CURLE_OK) {	
+			fprintf(stderr, "[v]: curl request failed\n");
+		}
+		char *info = NULL;
+		curl_easy_getinfo(curl_version, CURLINFO_REDIRECT_URL, &info);
+		if (info) {
+			char *git_version = strrchr(info, '/') + 1;
+			if (memcmp(git_version, version, strlen(git_version)) == 0) {
+				fprintf(stdout, "You already at the latest version `%s`!\nAbort..\n", version);
+				curl_easy_cleanup(curl_version);
+				return ;
+			}
+			else {
+				fprintf(stdout, "You are outdated, latest is `%s`\nUpdating..", git_version);
+			}
+		}
+		curl_easy_cleanup(curl_version);
+	}	
 	curl = curl_easy_init();
 	if (curl) {
 		curl_easy_setopt(curl, CURLOPT_URL, CURL_PATH);
@@ -56,8 +79,7 @@ void cmd_update(void) {
 		}
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, f);
 		curl_easy_setopt(curl, CURLOPT_USERAGENT, "exposx");
-		result = curl_easy_perform(curl);
-		if (result != CURLE_OK) {
+		if (curl_easy_perform(curl) != CURLE_OK) {
 			fprintf(stderr, "[v]: curl request failed\n");
 		}
 		curl_easy_cleanup(curl);
@@ -91,7 +113,7 @@ void set_version() {
 		}
 		storage[pos] = '\0';
 		if (memcmp(VERSION_STRING, storage, strlen(VERSION_STRING)) == 0) {
-			strncpy(version, storage + sizeof(VERSION_STRING), VERSION_SIZE);
+			strncpy(version, storage + strlen(VERSION_STRING), VERSION_SIZE);
 			if (flag & (f_uint)VERBOSE_OPT) {
 				printf("[v]: found version `%s`\n", version);
 			}
