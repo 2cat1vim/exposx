@@ -38,12 +38,19 @@ check_package:
 		echo "Download it..";\
 		sudo apt-get install -y clang;\
 	fi
+	@if dpkg -s libarchive-dev > /dev/null 2>&1; then\
+		echo "Libarchive is already installed";\
+	else\
+		echo "Libarchive is not installed";\
+		echo "Download it..";\
+		sudo apt-get install -y libarchive-dev;\
+	fi
 
 NAME := exposx_$(STROS)
 
 OBJS = $(SRC:.c=.o)
 $(NAME): $(OBJS)
-	$(CC) $(CFLAGS) -o $(NAME) $(OBJS) -lcurl
+	$(CC) $(CFLAGS) -o $(NAME) $(OBJS) -lcurl -larchive
 
 all: check_os check_package $(NAME)
 

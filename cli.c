@@ -3,9 +3,13 @@
 #include <string.h>
 #include <stdlib.h>
 #include <curl/curl.h>
+#include <archive.h>
 #include <ctype.h>
 
 #define CURL_PATH "https://github.com/2cat1vim/exposx/releases/latest"
+#define CURL_DOWNLOAD_START_PATH "https://github.com/2cat1vim/exposx/archive/refs/tags/"
+#define CURL_DOWNLOAD_END_PATH ".tar.gz"
+#define UPDATETAR_NAME "update_exposx.tar.gz"
 #define CONF_PATH ".exposx"
 	#define VERSION_STRING "version:"
 	#define VERSION_SIZE 4
@@ -39,11 +43,40 @@ void cmd_search(void) {
 	return ;
 }
 
+void build_update(void) {
+	ssize_t r;
+	char buf[16384];
+	size_t bufsize = sizeof(buf);
+	struct archive *a = archive_read_new();
+	struct archive_entry *entry;
+	archive_read_support_filter_all(a);
+	archive_read_support_format_raw(a);
+	if (archive_read_open_filename(a, (const char*)UPDATETAR_NAME, 16384) != ARCHIVE_OK) {
+		fprintf(stderr, "[v]: archive not ok\n");
+		return ;
+	}
+	if (archive_read_next_header(a, &entry) != ARCHIVE_OK) {
+		fprintf(stderr, "[v]: archive not ok\n");
+		return ;
+	}
+	while (1) {
+		r = archive_read_data(a, buf, bufsize);
+		if (r < 0) {
+			fprintf(stderr, "[v]: archive not ok\n");
+			return ;
+		}
+		if (r == 0) {
+			break;
+		}
+		write(1, buf, r);
+	}
+	archive_read_free(a);	
+}
+
 void cmd_update(void) {
 	CURL *curl;
 	if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
 		fprintf(stderr, "[v]: curl not ok\n");
-
 		return ;
 	}
 	curl = curl_easy_init();
@@ -88,13 +121,17 @@ void cmd_update(void) {
 		return ;
 	}
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-	FILE *f = fopen("update_exposx.tar.gz", "w");
+	FILE *f = fopen((const char*)UPDATETAR_NAME, "w");
 	if (!f) {
 		perror("fopen");
 		curl_easy_cleanup(curl);
 		curl_global_cleanup();
 		exit(EXIT_FAILURE);
 	}
+	ull len = strlen(CURL_DOWNLOAD_START_PATH) + strlen(git_version) + strlen(CURL_DOWNLOAD_END_PATH) + 1;
+	char format_path[len];
+	snprintf(format_path, len, "%s%s%s", CURL_DOWNLOAD_START_PATH, git_version, CURL_DOWNLOAD_END_PATH);
+	curl_easy_setopt(curl, CURLOPT_URL, format_path);
 	curl_easy_setopt(curl, CURLOPT_NOBODY, 0L);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, f);
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, "exposx");
@@ -104,6 +141,7 @@ void cmd_update(void) {
 	fclose(f);
 	curl_easy_cleanup(curl);
 	curl_global_cleanup();
+	build_update();
 }
 
 void set_version() {
