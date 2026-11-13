@@ -1,7 +1,7 @@
-NAME = srv
+NAME = exposx-server
 CC = cc
 CFLAGS = -g -Wall -Wextra -Werror 
-SRC = receive.c 
+SRC = srv.c 
 
 OBJS = $(SRC:.c=.o)
 
