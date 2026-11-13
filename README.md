@@ -14,7 +14,7 @@ Everyday at 07:30 (PARIS-GMT) it call https://nvd.nist.gov/developers/vulnerabil
 and retrieve all the new CVE.
 On the other side it remove all cve older than 365 days from now.
 
-## about the api that I clone.
+## about the api that I clone
 ```
 int yesterday
 int today
@@ -24,6 +24,7 @@ FORMAT=curl "https://services.nvd.nist.gov/rest/json/cves/2.0?kevStartDate=yeste
 This would need to be parsed and pushed to SQLite.
 When its done I need to TRY erasing the CVE older than 365 days.
 
+## exposx usage
 ```
 exposx -h -> usage/help
 exposx -v -> verbose
