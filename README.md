@@ -47,4 +47,5 @@ exposx$ search <(id | name)> or poc <id> or export <id> <(json | pretty)> or upd
 ## AI Policy
 No AI is tolerated in this repo, this is all for fun and the love of the game.
 It would be pretty sad dude!
-Do not commit ANY !!CHAR!! FROM AI
+<img width="498" height="498" alt="image" src="https://github.com/user-attachments/assets/87c7c2f5-c15c-4643-8c59-21fd8efbb655" />
+
