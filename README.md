@@ -48,4 +48,4 @@ exposx$ search <(id | name)> or poc <id> or export <id> <(json | pretty)> or upd
 No AI is tolerated in this repo, this is all for fun and the love of the game.
 It would be pretty sad dude!
 
-<img width="498" height="498" alt="gif" src="https://github.com/user-attachments/assets/87c7c2f5-c15c-4643-8c59-21fd8efbb655" />
+<img width="88" height="31" alt="image" src="https://github.com/user-attachments/assets/9881f34c-e993-48e5-923f-e2b7a554257c" />
