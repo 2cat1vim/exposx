@@ -1,5 +1,4 @@
-# EXPOSX
-<img width="50" height="50" alt="image" src="https://github.com/user-attachments/assets/bc94c4ea-f656-4403-bf55-98ccbdf9bceb" />
+# EXPOSX <img width="50" height="50" alt="image" src="https://github.com/user-attachments/assets/bc94c4ea-f656-4403-bf55-98ccbdf9bceb" />
 
 EXPOSX, Common Vulnerability Expose - Common Line Interace (C, NO AI).
 We keep only the latest CVE (365d).
