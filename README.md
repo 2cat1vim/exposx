@@ -2,6 +2,15 @@
 EXPOSX, Common Vulnerability Expose - Common Line Interace (C, NO AI).
 We keep only the latest CVE (365d).
 
+## compatibility
+exposx can run on Linux and MacOS.
+I implemented a docker_compose.yml if you need to use it on a Windows Machine or any other.
+The docker compose is only used to get the CLIENT running.
+The SERVER is not implemented in the docker compose, because it would be useless.
+(The server is making daily api call on the internet to update his CVE DATA,
+meaning that hosting your own would not help you at all)
+You are still free to implement SERVER in your own DOCKER!
+
 ## roadmap
 C Client Scanner -> C Server on VPS
 
