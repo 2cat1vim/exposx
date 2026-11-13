@@ -30,7 +30,7 @@ exposx -h -> usage/help
 exposx -v -> verbose
 exposx -s -> stdin
 
-exposx$ search <(id | name | ex_id)> or export <ex_id> <(json | pretty)> or update or exit
+exposx$ search <(id | name)> or poc <id> or export <id> <(json | pretty)> or update or exit
 ```
 
 ## AI Policy
