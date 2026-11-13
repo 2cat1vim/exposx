@@ -30,10 +30,10 @@ exposx -h -> usage/help
 exposx -v -> verbose
 exposx -s -> stdin
 
-exposx$ search or update or exit
+exposx$ search <(id | name | ex_id)> or export <ex_id> <(json | pretty)> or update or exit
 ```
 
 ## AI Policy
-No AI is tolerated in this repo!
-Do not commit any vibecoded code :)
-o not commit any vibecoded code :)
+No AI is tolerated in this repo, this is all for fun and the love of the game.
+It would be pretty sad dude!
+Do not commit ANY !!CHAR!! FROM AI
