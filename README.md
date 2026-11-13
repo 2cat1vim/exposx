@@ -1,7 +1,8 @@
 # exposx
-CVE-CLI, Common Vulnerability Expose - Common Line Interace (C, NO AI).
+EXPOSX, Common Vulnerability Expose - Common Line Interace (C, NO AI).
+We keep only the latest CVE (365d).
 
-# roadmap
+## roadmap
 C Client Scanner -> C Server on VPS
 
 C Client
@@ -12,6 +13,16 @@ C Server
 Everyday at 07:30 (PARIS-GMT) it call https://nvd.nist.gov/developers/vulnerabilities,
 and retrieve all the new CVE.
 On the other side it remove all cve older than 365 days from now.
+
+## about the api that I clone.
+```
+int yesterday
+int today
+RAW=curl "https://services.nvd.nist.gov/rest/json/cves/2.0?kevStartDate=2026-11-10T00:00:00.000Z&kevEndDate=2026-11-13T23:59:59.000Z"
+FORMAT=curl "https://services.nvd.nist.gov/rest/json/cves/2.0?kevStartDate=yesterdayT00:00:00.000Z&kevEndDate=todayT23:59:59.000Z"
+```
+This would need to be parsed and pushed to SQLite.
+When its done I need to TRY erasing the CVE older than 365 days.
 
 ```
 exposx -h -> usage/help
