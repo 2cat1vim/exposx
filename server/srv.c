@@ -6,11 +6,16 @@
 #include <netinet/in.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <fcntl.h>
 
 #define SOCKET_FAIL -1
 #define BIND_FAIL -1
 #define LISTEN_FAIL -1
 #define ACCEPT_FAIL -1
+#define RECV_FAIL -1
+#define FCNTL_GETFL_FAIL 0
+#define FCNTL_SETFL_FAIL -1
+#define MY_HOME_SERVER_DONT_BURN 1
 #define BUFFER_SIZE 64
 
 int main(int ac, char **av) {
@@ -48,16 +53,42 @@ int main(int ac, char **av) {
 	}
 	fprintf(stdout, "exposx_server : listen success `%d`\n", fd);
 	socklen_t lsa = sizeof(lsa);
-	int client_fd = accept(fd, (struct sockaddr*)&sa, &lsa);
-	if (client_fd == ACCEPT_FAIL) {
-		close(fd);
-		perror("accept");
-		exit(EXIT_FAILURE);
+
+	fd_set fds, readfds;
+	FD_ZERO(&fds);
+	FD_SET(fd, &fds);
+	while (MY_HOME_SERVER_DONT_BURN) {
+		readfds = fds;
+		if (select(FD_SETSIZE, &readfds, NULL, NULL, NULL) < -1) {
+			close(fd);
+			perror("select");
+			exit(EXIT_FAILURE);
+		}
+		for (int i = 0; i < FD_SETSIZE; i++) {
+			if (FD_ISSET(i, &readfds)) {
+				if (i == fd) {	
+					int client_fd = accept(fd, (struct sockaddr*)&sa, &lsa);
+					if (client_fd == ACCEPT_FAIL) {
+						close(fd);
+						perror("accept");
+						exit(EXIT_FAILURE);
+					}
+					FD_SET(client_fd, &fds);
+				}
+				else {
+					char buffer[BUFFER_SIZE];
+					size_t lbuffer = sizeof(buffer);
+					if (recv(i, buffer, lbuffer, 0) == RECV_FAIL) {
+						close(fd);
+						perror("recv");
+						exit(EXIT_FAILURE);
+					}	
+					close(i);
+					fprintf(stdout, "client `%d`: %s\n", i, buffer);
+					memset(buffer, 0, lbuffer);
+				}
+			}
+		}
 	}
-	fprintf(stdout, "exposx_server : `%d` accepted a request from `%d`\n", fd, client_fd);
-	char buffer[BUFFER_SIZE];
-	size_t lbuffer = sizeof(buffer);
-	read(client_fd, buffer, lbuffer);
-	fprintf(stdout, "client_fd: `%d`: %s\n", client_fd, buffer);
 	close(fd);
 }
