@@ -5,6 +5,12 @@
 #include <curl/curl.h>
 #include <archive.h>
 #include <ctype.h>
+#include <sys/types.h>
+#include <ifaddrs.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+
 
 #define CURL_PATH "https://github.com/2cat1vim/exposx/releases/latest"
 #define CURL_DOWNLOAD_START_PATH "https://github.com/2cat1vim/exposx/archive/refs/tags/"
@@ -13,6 +19,11 @@
 #define CONF_PATH ".exposx"
 	#define VERSION_STRING "version:"
 	#define VERSION_SIZE 4
+	#define SIGNATURE_STRING "signature:"
+ 	#define SIGNATURE_SIZE 32
+
+#define IPV4_LEN 16
+#define SIGNATURE_SIZE 32
 
 #define READ_LIMIT 256
 
@@ -24,7 +35,14 @@ typedef unsigned int f_uint;
 typedef unsigned long long ull;
 
 f_uint flag = 0;
+			
 char version[VERSION_SIZE + 1];
+
+typedef struct t_pkt {
+	char sender[IPV4_LEN];
+	char signature[SIGNATURE_SIZE];
+	int32_t request;
+} __attribute__((packed)) s_pkt;
 
 void header(void) {
 	printf("\n░█▀▀░█░█░█▀█░█▀█░█▀▀░█░█\n"
@@ -40,7 +58,7 @@ void cmd_exit(void) {
 }
 
 void cmd_search(void) {
-	return ;
+	
 }
 
 void build_update(void) {
@@ -183,6 +201,36 @@ void set_version() {
 	fclose(f);
 }
 
+void set_socket() {
+	int fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (fd == -1) {
+		perror("socket");
+		exit(EXIT_FAILURE);
+	}
+	struct sockaddr_in sa[1];
+	memset(&sa, 0, sizeof(struct sockaddr*));
+	sa->sin_family = AF_INET;
+	sa->sin_port = htons(8080);
+	sa->sin_addr.s_addr = inet_addr("127.0.0.1");
+	if (connect(fd, (const struct sockaddr*)&sa, sizeof(sa)) == -1) {
+		close(fd);
+		perror("connect");
+		exit(EXIT_FAILURE);
+	}
+	char packet[54];
+	size_t lpacket = sizeof(packet);
+	struct t_pkt *pkt = (struct t_pkt*)packet;
+	strcpy(pkt->sender, "127.0.0.1");
+	strcpy(pkt->signature, "867346c2f777b6c02400257d40305377");
+	pkt->request = 0;
+	if (send(fd, packet, lpacket, 0) == -1) {
+		close(fd);
+		perror("send");
+		exit(EXIT_FAILURE);	
+	}
+	close(fd);
+}
+
 int main(int ac, char *const *av) {
 	opterr = 0;
 	optopt = '?';
@@ -206,6 +254,7 @@ int main(int ac, char *const *av) {
 			}
 	}
 	set_version();
+	set_socket();
 	while (1) {
 		fprintf(stdout, "exposx$ ");
 		fflush(stdout);

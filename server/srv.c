@@ -16,13 +16,22 @@
 #define FCNTL_GETFL_FAIL 0
 #define FCNTL_SETFL_FAIL -1
 #define MY_HOME_SERVER_DONT_BURN 1
-#define BUFFER_SIZE 64
+#define BUFFER_SIZE 54
+#define IPV4_LEN 16
+#define SIGNATURE_SIZE 32
+
+typedef struct t_pkt {
+	char sender[IPV4_LEN + 1];
+	char signature[SIGNATURE_SIZE + 1];
+	int32_t request;
+} __attribute__((packed)) s_pkt;
 
 int main(int ac, char **av) {
 	if (ac < 2) {
 		fprintf(stderr, "exposx_server : args < 2 : missing port\n");
 		exit(EXIT_FAILURE);
 	}
+	printf("%zu\n", sizeof(s_pkt));
 	int port = atoi(av[1]);
 	if (port <= 0) {
 		fprintf(stderr, "exposx_server : atoi : port need to be a unsigned int\n");
@@ -53,7 +62,6 @@ int main(int ac, char **av) {
 	}
 	fprintf(stdout, "exposx_server : listen success `%d`\n", fd);
 	socklen_t lsa = sizeof(lsa);
-
 	fd_set fds, readfds;
 	FD_ZERO(&fds);
 	FD_SET(fd, &fds);
@@ -74,18 +82,27 @@ int main(int ac, char **av) {
 						exit(EXIT_FAILURE);
 					}
 					FD_SET(client_fd, &fds);
+					fprintf(stdout, "exposx_server : new connection received\n");
 				}
 				else {
-					char buffer[BUFFER_SIZE];
-					size_t lbuffer = sizeof(buffer);
-					if (recv(i, buffer, lbuffer, 0) == RECV_FAIL) {
+					char packet[BUFFER_SIZE + 1];
+					size_t lpacket = sizeof(packet);
+					int r = -1;
+					if ((r = recv(i, packet, lpacket, 0)) == RECV_FAIL) {
 						close(fd);
 						perror("recv");
 						exit(EXIT_FAILURE);
-					}	
+					}
+					if ((size_t)r != BUFFER_SIZE) {
+						fprintf(stdout, "client `%d`: sent a non-valid packet`%d`\n", i, r);
+					}
+					else {
+						struct t_pkt *pkt = (struct t_pkt*)packet;
+						fprintf(stdout, "exposx_server : %s sent a correct request\n", pkt->sender);
+					}
+					memset(packet, 0, lpacket);
+					FD_CLR(i, &fds);
 					close(i);
-					fprintf(stdout, "client `%d`: %s\n", i, buffer);
-					memset(buffer, 0, lbuffer);
 				}
 			}
 		}

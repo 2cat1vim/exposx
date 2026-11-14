@@ -1,6 +1,6 @@
 # EXPOSX <img width="50" height="50" alt="image" src="https://github.com/user-attachments/assets/bc94c4ea-f656-4403-bf55-98ccbdf9bceb" />
 
-EXPOSX, Common Vulnerability Expose - Common Line Interace (C, NO AI).
+EXPOSX, Common Vulnerability Exposure - Common Line Interace (C, NO AI).
 We keep only the latest CVE (365d).
 
 ## compatibility
@@ -50,3 +50,4 @@ No AI is tolerated in this repo, this is all for fun and the love of the game.
 It would be pretty sad dude!
 
 <img width="88" height="31" alt="image" src="https://github.com/user-attachments/assets/9881f34c-e993-48e5-923f-e2b7a554257c" />
+
